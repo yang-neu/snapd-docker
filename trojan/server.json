@@ -1,0 +1,17 @@
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": 443,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "log_level": 1,
+    "log_file": "/tmp/trojan.log",
+    "password": [
+        "niyouzhangliangji"
+    ],
+    "ssl": {
+        "cert": "/var/trojan/guoqiangti.crt",
+        "key": "/var/trojan/guoqiangti.key",
+        "sni": "guoqiangti.tk"
+    }
+}
