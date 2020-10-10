@@ -34,6 +34,9 @@ usage() {
 
 print_info() {
     echo
+    echo "use: $SUDO docker exec -it $CONTNAME <command> ... to run a command inside this container"
+    echo
+    echo "to remove the container use: $SUDO docker rm -f $CONTNAME"
     echo "to remove the related image use: $SUDO docker rmi $IMGNAME"
 }
 
@@ -96,6 +99,39 @@ CMD ["/sbin/init"]
 EOF
     $SUDO docker build -t $IMGNAME --force-rm=true --rm=true $BUILDDIR || clean_up
 fi
+
+# start the detached container
+$SUDO docker run \
+    --name=$CONTNAME \
+    -ti \
+    --tmpfs /run \
+    --tmpfs /run/lock \
+    --tmpfs /tmp \
+    --cap-add SYS_ADMIN \
+    --device=/dev/fuse \
+    --security-opt apparmor:unconfined \
+    --security-opt seccomp:unconfined \
+    -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+    -v /lib/modules:/lib/modules:ro \
+    -d $IMGNAME || clean_up
+
+# wait for snapd to start
+TIMEOUT=100
+SLEEP=0.1
+echo -n "Waiting up to $(($TIMEOUT/10)) seconds for snapd startup "
+while [ "$($SUDO docker exec $CONTNAME sh -c 'systemctl status snapd.seeded >/dev/null 2>&1; echo $?')" != "0" ]; do
+    echo -n "."
+    sleep $SLEEP || clean_up
+    if [ "$TIMEOUT" -le "0" ]; then
+        echo " Timed out!"
+        clean_up
+    fi
+    TIMEOUT=$(($TIMEOUT-1))
+done
+echo " done"
+
+$SUDO docker exec $CONTNAME snap install core --edge || clean_up
+echo "container $CONTNAME started ..."
 
 print_info
 rm_builddir
