@@ -75,10 +75,7 @@ while [ $# -gt 0 ]; do
        shift
 done
 
-if [ ! -d "./trojan" ]; then
-    echo 'Please fetch the trojan-go at first!'
-    echo 'wget https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.2/trojan-go-linux-amd64.zip'
-    echo 'unzip -d trojan trojan-go-linux-amd64.zip'
+if [ ! -f "./trojan/guoqiangti.crt" ]; then
     echo 'cp server.json trojan/'
     echo 'cp guoqiangti.crt trojan/'
     echo 'cp guoqiangti.key trojan/'
