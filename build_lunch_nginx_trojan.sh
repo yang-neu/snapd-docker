@@ -7,7 +7,7 @@
 
 set -e
 
-CONTNAME=trojan_go
+CONTNAME=trojan_go_capsule
 IMGNAME=ub18_snap_systemctl_ng_tj
 RELEASE=18.04
 
@@ -99,7 +99,7 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 RUN apt-get update &&\
  DEBIAN_FRONTEND=noninteractive\
- apt-get install -y fuse snapd snap-confine squashfuse sudo nginx &&\
+ apt-get install -y fuse snapd snap-confine squashfuse sudo nginx iproute2 &&\
  apt-get clean &&\
  dpkg-divert --local --rename --add /sbin/udevadm &&\
  ln -s /bin/true /sbin/udevadm
@@ -107,7 +107,6 @@ RUN systemctl enable snapd
 RUN systemctl enable nginx
 RUN mkdir -p /var/trojan
 VOLUME ["/sys/fs/cgroup"]
-COPY trojan/* /var/trojan/
 STOPSIGNAL SIGRTMIN+3
 CMD ["/sbin/init"]
 EOF
@@ -118,8 +117,6 @@ fi
 $SUDO docker run \
     --name=$CONTNAME \
     -ti \
-    -p 80:80 \
-    -p 443:443 \
     --tmpfs /run \
     --tmpfs /run/lock \
     --tmpfs /tmp \
@@ -129,6 +126,8 @@ $SUDO docker run \
     --security-opt seccomp:unconfined \
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
     -v /lib/modules:/lib/modules:ro \
+    -v $(pwd)/html:/var/html:ro \
+    -v $(pwd)/trojan:/var/trojan \
     -d $IMGNAME || clean_up
 
 # wait for snapd to start
